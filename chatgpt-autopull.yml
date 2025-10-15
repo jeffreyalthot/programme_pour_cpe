@@ -1,0 +1,40 @@
+name: ChatGPT Auto Pull Request
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  chatgpt_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create branch for ChatGPT updates
+        run: |
+          BRANCH="chatgpt-update-$(date +'%Y%m%d%H%M%S')"
+          git checkout -b $BRANCH
+          echo "## Fichiers générés par ChatGPT" > chatgpt_update_log.md
+          echo "- $(date)" >> chatgpt_update_log.md
+          git add chatgpt_update_log.md
+          git config user.name "ChatGPT-AI"
+          git config user.email "chatgpt@openai.com"
+          git commit -m "ChatGPT initial update"
+          git push origin $BRANCH
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "ChatGPT Auto Update"
+          body: |
+            Pull request automatique générée par ChatGPT.
+            Si approuvée, le code sera fusionné dans la branche principale.
+          branch: ${{ github.ref_name }}
+          base: main
